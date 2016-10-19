@@ -18,16 +18,49 @@ namespace Part1.ApplicationLogic.Services
         {
             _elasticClient = client;
         }
-        public IEnumerable<MessageCountEntity> GetMessageStats()
+        //public IEnumerable<MessageCountEntity> GetMessageStats()
+        //{
+        //    var response = _elasticClient.Search<MessageElasticModel>(s => s
+        //                   .Aggregations(a => a
+        //                   .DateRange("date_range", dateR => dateR
+        //                   .Field(f => f.ReceivedAt)
+        //                   .Format("YYYY-MM-DD")
+        //                   .Ranges(
+        //                       r => r.To("now"),
+        //                       r => r.From("now-24H")
+        //                    )
+        //                    .Aggregations(a2 => a2
+        //                    .SignificantTerms("signifint_terms", st => st
+        //                    .Field(f2 => f2.Provider.Type))))));
+
+        //    var agg = response.Aggs.DateRange("date_range").Items;
+
+            
+        //    int count = agg.Count;
+
+
+        //    var items = agg.Select(i => new MessageCountEntity
+        //    {
+        //        total_message = i.DocCount,
+                
+        //    });
+
+        //    // throw new NotImplementedException();
+        //    return items;
+        //}
+
+        public IEnumerable<MessageCountEntity> GetMessageStats(string fromDate="now-24H/H", string toDate="now")
         {
             var response = _elasticClient.Search<MessageElasticModel>(s => s
                            .Aggregations(a => a
                            .DateRange("date_range", dateR => dateR
-                           .Field(f => f.SentAt)
+                           .Field(f => f.ReceivedAt)
                            .Format("YYYY-MM-DD")
                            .Ranges(
-                               r => r.To("now"),
-                               r => r.From("now-24H")
+                               r => r.From(fromDate).To("now"),
+                               r => r.From("2010-10-01").To("2016-10-01"),
+                               r => r.From(fromDate),
+                               r => r.From(fromDate)
                             )
                             .Aggregations(a2 => a2
                             .SignificantTerms("signifint_terms", st => st
@@ -36,14 +69,15 @@ namespace Part1.ApplicationLogic.Services
             var agg = response.Aggs.DateRange("date_range").Items;
 
 
-            
-            int count = agg.Count;
-
-
             var items = agg.Select(i => new MessageCountEntity
             {
                 total_message = i.DocCount,
-                
+                message_states = i.SignificantTerms("signifint_terms").Items
+                                .Select(st => new range_buckets {
+                                    key = st.Key,
+                                    messages = st.DocCount
+                                })
+
             });
 
             // throw new NotImplementedException();

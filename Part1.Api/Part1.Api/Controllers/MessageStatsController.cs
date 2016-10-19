@@ -1,4 +1,5 @@
 ﻿using Part1.Api.Models;
+using Part1.ApplicationLogic.Entities;
 using Part1.ApplicationLogic.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -18,15 +19,26 @@ namespace Part1.Api.Controllers
             _icountMessage = icountMessage;
         }
 
-        public IEnumerable<MessageCountModel> GetMessageStates()
-        {
-            var results = _icountMessage.GetMessageStats();
+        //public IEnumerable<MessageCountModel> GetMessageStates()
+        //{
+        //    var results = _icountMessage.GetMessageStats();
 
-            return results.Select(s => new MessageCountModel {
-                total_message = s.total_message,
-                key = s.key,
-                messages = s.messages
-            }); 
+        //    return results.Select(s => new MessageCountModel {
+        //        total_message = s.total_message,
+        //        key = s.key,
+        //        messages = s.messages
+        //    }); 
+        //}
+
+        public IEnumerable<MessageCountEntity> GetMessageStats(string fromDate = "now-24H/H", string toDate = "now")
+        {
+            var results = _icountMessage.GetMessageStats(fromDate, toDate);
+
+            return results.Select(i => new MessageCountEntity
+            {
+                total_message = i.total_message,
+                message_states = i.message_states
+            });
         }
 
     }
