@@ -8,6 +8,7 @@ namespace Part1.Api.Models
     public class MessageCountModel
     {
         public long total_message { get; set; }
+        public DateTime date { set; get; }
         public IEnumerable<range_buckets> message_states { set;  get;}
 
     }
@@ -17,5 +18,9 @@ namespace Part1.Api.Models
         public string key { get; set; }
         public long messages { get; set; }
     }
+
+
+
+    
     
 }

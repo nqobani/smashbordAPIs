@@ -9,6 +9,7 @@ namespace Part1.ApplicationLogic.Entities
     public class MessageCountEntity
     {
         public long total_message { get; set; }
+        public DateTime date { set; get; }
         public IEnumerable<range_buckets> message_states { set; get; }
 
     }

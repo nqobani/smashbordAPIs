@@ -30,13 +30,25 @@ namespace Part1.Api.Controllers
         //    }); 
         //}
 
-        public IEnumerable<MessageCountEntity> GetMessageStats(string fromDate = "now-24H/H", string toDate = "now")
+        //public IEnumerable<MessageCountEntity> GetMessageStats(string fromDate = "now-24H/H", string toDate = "now")
+        //{
+        //    var results = _icountMessage.GetMessageStats(fromDate, toDate);
+
+        //    return results.Select(i => new MessageCountEntity
+        //    {
+        //        total_message = i.total_message,
+        //        message_states = i.message_states
+        //    });
+        //}
+
+        public IEnumerable<MessageCountEntity> GetMessageStats(string fromDate = "now-24H/H", string toDate = "now", string interval = "", string goBackBy="2M")
         {
-            var results = _icountMessage.GetMessageStats(fromDate, toDate);
+            var results = _icountMessage.GetMessageStats(fromDate, toDate, interval, goBackBy);
 
             return results.Select(i => new MessageCountEntity
             {
                 total_message = i.total_message,
+                date = i.date,
                 message_states = i.message_states
             });
         }
