@@ -10,6 +10,7 @@ using System.Web.Http;
 
 namespace Part1.Api.Controllers
 {
+    [RoutePrefix("api/MessageStats")]
     public class MessageStatsController : ApiController
     {
         private readonly ICountMessages _icountMessage;
@@ -19,31 +20,21 @@ namespace Part1.Api.Controllers
             _icountMessage = icountMessage;
         }
 
-        //public IEnumerable<MessageCountModel> GetMessageStates()
-        //{
-        //    var results = _icountMessage.GetMessageStats();
-
-        //    return results.Select(s => new MessageCountModel {
-        //        total_message = s.total_message,
-        //        key = s.key,
-        //        messages = s.messages
-        //    }); 
-        //}
-
-        //public IEnumerable<MessageCountEntity> GetMessageStats(string fromDate = "now-24H/H", string toDate = "now")
-        //{
-        //    var results = _icountMessage.GetMessageStats(fromDate, toDate);
-
-        //    return results.Select(i => new MessageCountEntity
-        //    {
-        //        total_message = i.total_message,
-        //        message_states = i.message_states
-        //    });
-        //}
-
-        public IEnumerable<MessageCountEntity> GetMessageStats(string fromDate = "now-24H/H", string toDate = "now", string interval = "", string goBackBy="2M")
+        public IEnumerable<CountAllMessagesEntity> GetMessageStats()
         {
-            var results = _icountMessage.GetMessageStats(fromDate, toDate, interval, goBackBy);
+            var results = _icountMessage.GetMessageStats();
+
+            return results.Select(s => new CountAllMessagesEntity
+            {
+                total_messages = s.total_messages,
+                message_states = s.message_states
+            });
+        }
+
+        [Route("date_range")]
+        public IEnumerable<MessageCountEntity> GetMessageStat(string fromDate = "now-24H/H", string toDate = "now")
+        {
+            var results = _icountMessage.GetMessageStat(fromDate, toDate);
 
             return results.Select(i => new MessageCountEntity
             {
@@ -53,5 +44,17 @@ namespace Part1.Api.Controllers
             });
         }
 
+        [Route("mult_date_ranges")]
+        public IEnumerable<MessageCountEntity> GetMessageStats( string interval, string goBackBy="1M")
+        {
+            var results = _icountMessage.GetMessageStats(interval, goBackBy);
+
+            return results.Select(i => new MessageCountEntity
+            {
+                total_message = i.total_message,
+                date = i.date,
+                message_states = i.message_states
+            });
+        }
     }
 }

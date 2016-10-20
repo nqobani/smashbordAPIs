@@ -20,4 +20,14 @@ namespace Part1.ApplicationLogic.Entities
         public long messages { get; set; }
     }
 
+
+
+    public class CountAllMessagesEntity
+    {
+        public long total_messages { set; get; }
+        public IEnumerable<range_buckets> message_states { set; get; }
+    }
+
+
+
 }

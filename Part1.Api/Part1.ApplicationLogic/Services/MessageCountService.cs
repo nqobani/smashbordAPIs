@@ -18,80 +18,76 @@ namespace Part1.ApplicationLogic.Services
         {
             _elasticClient = client;
         }
-        //public IEnumerable<MessageCountEntity> GetMessageStats()
-        //{
-        //    var response = _elasticClient.Search<MessageElasticModel>(s => s
-        //                   .Aggregations(a => a
-        //                   .DateRange("date_range", dateR => dateR
-        //                   .Field(f => f.ReceivedAt)
-        //                   .Format("YYYY-MM-DD")
-        //                   .Ranges(
-        //                       r => r.To("now"),
-        //                       r => r.From("now-24H")
-        //                    )
-        //                    .Aggregations(a2 => a2
-        //                    .SignificantTerms("signifint_terms", st => st
-        //                    .Field(f2 => f2.Provider.Type))))));
-
-        //    var agg = response.Aggs.DateRange("date_range").Items;
-
-            
-        //    int count = agg.Count;
 
 
-        //    var items = agg.Select(i => new MessageCountEntity
-        //    {
-        //        total_message = i.DocCount,
-                
-        //    });
-
-        //    // throw new NotImplementedException();
-        //    return items;
-        //}
-
-        //public IEnumerable<MessageCountEntity> GetMessageStats(string fromDate="2016-10-01", string toDate= "2016-10-19")
-        //{
-        //    var response = _elasticClient.Search<MessageElasticModel>(s => s
-        //                   .Aggregations(a => a
-        //                   .DateRange("date_range", dateR => dateR
-        //                   .Field(f => f.ReceivedAt)
-        //                   .Format("YYYY-MM-DD")
-        //                   .Ranges(
-        //                       r => r.From("2016-10-01").To("2016-10-19")
-        //                    )
-        //                    .Aggregations(a2 => a2
-        //                    .SignificantTerms("signifint_terms", st => st
-        //                    .Field(f2 => f2.Provider.Type))))));
-
-        //    var agg = response.Aggs.DateRange("date_range").Items;
-
-
-        //    var items = agg.Select(i => new MessageCountEntity
-        //    {
-        //        total_message = i.DocCount,
-        //        message_states = i.SignificantTerms("signifint_terms").Items
-        //                        .Select(st => new range_buckets {
-        //                            key = st.Key,
-        //                            messages = st.DocCount
-        //                        })
-
-        //    });
-
-        //    return items;
-        //}
-
-        public IEnumerable<MessageCountEntity> GetMessageStats(string fromDate, string toDate, string interval, string goBackBy /*This variable will contain time(period) that the aggrigation will have to start from */)
+        public IEnumerable<CountAllMessagesEntity> GetMessageStats()
         {
-            if(interval.Length > 0)
+            var response = _elasticClient.Search<MessageElasticModel>(s => s
+                                                                         .Aggregations(a => a
+                                                                                        .Terms("group_all_by_source_id", t => t
+                                                                                                                              .Field(f => f.Provider.Type)))
+                                                                                                                                    .Aggregations(a => a
+                                                                                                                                                    .Terms("group_all_by_provider_type", t=> t
+                                                                                                                                                                                          .Field(f => f.Provider.Type))));
+
+            var aggs = response.Aggs.Terms("group_all_by_source_id").Items;
+
+            var terms = aggs.Select(i => new CountAllMessagesEntity
             {
+                total_messages = i.DocCount,
+                message_states = i.Terms("group_all_by_provider_type").Items.Select(d => new range_buckets {
+                    key = d.Key,
+                    messages = d.DocCount
+                })
+            });
+
+            return terms;
+        }
+
+        public IEnumerable<MessageCountEntity> GetMessageStat(string fromDate = "now-24H/H", string toDate = "now")
+        {
+            var response = _elasticClient.Search<MessageElasticModel>(s => s
+                                                                        .Aggregations(a => a
+                                                                                        .DateRange("date_range", dateR => dateR
+                                                                                                                        .Field(f => f.ReceivedAt)
+                                                                                                                        .Format("YYYY-MM-DD")
+                                                                                                                        .Ranges(r => r.From(fromDate).To(toDate))
+                                                                                                                        .Aggregations(a2 => a2
+                                                                                                                                        .Terms("signifint_terms", st => st
+                                                                                                                                                                 .Field(f2 => f2.Provider.Type)))))
+                                                                       );
+
+            var agg = response.Aggs.DateRange("date_range").Items;
+
+
+            var items = agg.Select(i => new MessageCountEntity
+            {
+                total_message = i.DocCount,
+                message_states = i.Terms("signifint_terms").Items
+                                .Select(st => new range_buckets
+                                {
+                                    key = st.Key,
+                                    messages = st.DocCount
+                                })
+
+            });
+
+            return items;
+        }
+
+        public IEnumerable<MessageCountEntity> GetMessageStats(String interval, String goBackBy /*This variable will contain time(period) that the aggrigation will have to start from */)
+        {
+            
+                interval = interval.ToLower();
                 var response = _elasticClient.Search<MessageElasticModel>(s => s
-                                                                      .Query(q => q.Range(r => r.OnField(of => of.ReceivedAt).GreaterOrEquals("now-"+goBackBy)))
+                                                                      .Query(q => q.Range(r => r.OnField(of => of.ReceivedAt).GreaterOrEquals("now-" + goBackBy)))
                                                                       .Size(0)
                                                                       .Aggregations(a => a.DateHistogram("date_histogram", dh => dh
                                                                                                                           .Field(f => f.ReceivedAt)
                                                                                                                           .Interval(interval)
                                                                                                                           .Aggregations(a2 => a2.SignificantTerms("significant_terss", st => st
-                                                                                                                                                                                       .Field(f => f.Provider.Type))))));
+                                                                                                                                                                                       .Field(f => f.Provider.Type)))))
+                                                                     );
 
 
                 var aggs = response.Aggs.DateHistogram("date_histogram").Items;
@@ -106,41 +102,8 @@ namespace Part1.ApplicationLogic.Services
                                          messages = ss.DocCount
                                      })
                 });
-
                 return terms;
-            }
-            else
-            {
-                var response = _elasticClient.Search<MessageElasticModel>(s => s
-                           .Aggregations(a => a
-                           .DateRange("date_range", dateR => dateR
-                           .Field(f => f.ReceivedAt)
-                           .Format("YYYY-MM-DD")
-                           .Ranges(
-                               r => r.From("2016-10-01").To("2016-10-19")
-                            )
-                            .Aggregations(a2 => a2
-                            .SignificantTerms("signifint_terms", st => st
-                            .Field(f2 => f2.Provider.Type))))));
-
-                var agg = response.Aggs.DateRange("date_range").Items;
-
-
-                var items = agg.Select(i => new MessageCountEntity
-                {
-                    total_message = i.DocCount,
-                    message_states = i.SignificantTerms("signifint_terms").Items
-                                    .Select(st => new range_buckets
-                                    {
-                                        key = st.Key,
-                                        messages = st.DocCount
-                                    })
-
-                });
-
-                return items;
-            }
-            
         }
+
     }
 }

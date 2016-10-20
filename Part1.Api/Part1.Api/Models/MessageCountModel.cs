@@ -20,7 +20,11 @@ namespace Part1.Api.Models
     }
 
 
+    public class CountAllMessagesModel
+    {
+        public long total_messages { set; get; }
+        public IEnumerable<range_buckets> message_states { set; get; }
+    }
 
-    
-    
+
 }

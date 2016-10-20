@@ -1,4 +1,5 @@
 ﻿using Part1.ApplicationLogic.Entities;
+using System;
 using System.Collections.Generic;
 
 namespace Part1.ApplicationLogic.Interfaces
@@ -14,9 +15,9 @@ namespace Part1.ApplicationLogic.Interfaces
 
     public interface ICountMessages
     {
-        //IEnumerable<MessageCountEntity> GetMessageStats();
-        //IEnumerable<MessageCountEntity> GetMessageStats(string fromDate, string toDate);
-        IEnumerable<MessageCountEntity> GetMessageStats(string fromDate, string toDate, string interval, string goBackBy);
+        IEnumerable<CountAllMessagesEntity> GetMessageStats();
+        IEnumerable<MessageCountEntity> GetMessageStat(string fromDate, string toDate);
+        IEnumerable<MessageCountEntity> GetMessageStats(string interval, string goBackBy);
     }
 
 }
