@@ -19,10 +19,15 @@ namespace Part1.Api.Models
         public long messages { get; set; }
     }
 
+    public class ResultModel
+    {
+        public long total_messages { get; set; }
+        public IEnumerable<CountAllMessagesModel> users { get; set; }
+    }
 
     public class CountAllMessagesModel
     {
-        public long total_messages { set; get; }
+        public string user_id { set; get; }
         public IEnumerable<range_buckets> message_states { set; get; }
     }
 

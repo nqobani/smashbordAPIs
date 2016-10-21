@@ -15,7 +15,7 @@ namespace Part1.ApplicationLogic.Interfaces
 
     public interface ICountMessages
     {
-        IEnumerable<CountAllMessagesEntity> GetMessageStats();
+        ResultEntity GetMessageStats();
         IEnumerable<MessageCountEntity> GetMessageStat(string fromDate, string toDate);
         IEnumerable<MessageCountEntity> GetMessageStats(string interval, string goBackBy);
     }

@@ -10,7 +10,7 @@ using System.Web.Http;
 
 namespace Part1.Api.Controllers
 {
-    [RoutePrefix("api/MessageStats")]
+    [RoutePrefix("api/message")]
     public class MessageStatsController : ApiController
     {
         private readonly ICountMessages _icountMessage;
@@ -19,19 +19,25 @@ namespace Part1.Api.Controllers
         {
             _icountMessage = icountMessage;
         }
-
-        public IEnumerable<CountAllMessagesEntity> GetMessageStats()
+        [Route("users")]
+        public ResultEntity GetMessageStats()
         {
             var results = _icountMessage.GetMessageStats();
 
-            return results.Select(s => new CountAllMessagesEntity
+            var user =  results.users.Select(s => new CountAllMessagesEntity
             {
-                total_messages = s.total_messages,
+                user_id = s.user_id,
                 message_states = s.message_states
             });
+            ResultEntity res = new ResultEntity();
+            res.users = user;
+            res.total_messages= results.total_messages;
+
+
+            return res;
         }
 
-        [Route("date_range")]
+        [Route("singleRange")]
         public IEnumerable<MessageCountEntity> GetMessageStat(string fromDate = "now-24H/H", string toDate = "now")
         {
             var results = _icountMessage.GetMessageStat(fromDate, toDate);
@@ -44,7 +50,7 @@ namespace Part1.Api.Controllers
             });
         }
 
-        [Route("mult_date_ranges")]
+        [Route("multRange")]
         public IEnumerable<MessageCountEntity> GetMessageStats( string interval, string goBackBy="1M")
         {
             var results = _icountMessage.GetMessageStats(interval, goBackBy);

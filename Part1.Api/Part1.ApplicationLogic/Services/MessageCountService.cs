@@ -20,28 +20,33 @@ namespace Part1.ApplicationLogic.Services
         }
 
 
-        public IEnumerable<CountAllMessagesEntity> GetMessageStats()
+        public ResultEntity GetMessageStats()
         {
             var response = _elasticClient.Search<MessageElasticModel>(s => s
                                                                          .Aggregations(a => a
                                                                                         .Terms("group_all_by_source_id", t => t
-                                                                                                                              .Field(f => f.Provider.Type)))
-                                                                                                                                    .Aggregations(a => a
-                                                                                                                                                    .Terms("group_all_by_provider_type", t=> t
-                                                                                                                                                                                          .Field(f => f.Provider.Type))));
+                                                                                                                              .Field(f => f.Source.Id)
+                                                                                                                                    .Aggregations(agg => agg
+                                                                                                                                                    .Terms("group_all_by_provider_type", tm=> tm
+                                                                                                                                                                                          .Field(f => f.Provider.Type))))));
 
             var aggs = response.Aggs.Terms("group_all_by_source_id").Items;
 
+
             var terms = aggs.Select(i => new CountAllMessagesEntity
             {
-                total_messages = i.DocCount,
-                message_states = i.Terms("group_all_by_provider_type").Items.Select(d => new range_buckets {
+                user_id = i.Key,
+                message_states = i.Terms("group_all_by_provider_type").Items
+                .Select(d => new range_buckets {
                     key = d.Key,
                     messages = d.DocCount
                 })
             });
+            ResultEntity res = new ResultEntity();
+            res.users = terms;
+            res.total_messages = response.HitsMetaData.Total;
 
-            return terms;
+            return res;
         }
 
         public IEnumerable<MessageCountEntity> GetMessageStat(string fromDate = "now-24H/H", string toDate = "now")

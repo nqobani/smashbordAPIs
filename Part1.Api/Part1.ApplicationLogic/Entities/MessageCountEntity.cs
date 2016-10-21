@@ -21,10 +21,14 @@ namespace Part1.ApplicationLogic.Entities
     }
 
 
-
+    public class ResultEntity
+    {
+        public long total_messages { get; set; }
+        public IEnumerable<CountAllMessagesEntity> users { get; set; }
+    }
     public class CountAllMessagesEntity
     {
-        public long total_messages { set; get; }
+        public string user_id { set; get; }
         public IEnumerable<range_buckets> message_states { set; get; }
     }
 
