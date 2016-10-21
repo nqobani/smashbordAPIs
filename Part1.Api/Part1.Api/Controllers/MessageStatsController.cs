@@ -51,9 +51,9 @@ namespace Part1.Api.Controllers
         }
 
         [Route("multRange")]
-        public IEnumerable<MessageCountEntity> GetMessageStats( string interval, string goBackBy="1M")
+        public IEnumerable<MessageCountEntity> GetMessageStats( string interval, string startDate="", string endDate="", string goBackBy= "1M")
         {
-            var results = _icountMessage.GetMessageStats(interval, goBackBy);
+            var results = _icountMessage.GetMessageStats(interval, startDate, endDate, goBackBy);
 
             return results.Select(i => new MessageCountEntity
             {

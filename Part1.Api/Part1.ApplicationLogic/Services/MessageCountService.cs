@@ -80,12 +80,39 @@ namespace Part1.ApplicationLogic.Services
             return items;
         }
 
-        public IEnumerable<MessageCountEntity> GetMessageStats(String interval, String goBackBy /*This variable will contain time(period) that the aggrigation will have to start from */)
+        public IEnumerable<MessageCountEntity> GetMessageStats(String interval, string startDate, string endDate, String goBackBy /* goBackBy>> This variable will contain time(period) that the aggrigation will have to start from */)
         {
             
                 interval = interval.ToLower();
-                var response = _elasticClient.Search<MessageElasticModel>(s => s
-                                                                      .Query(q => q.Range(r => r.OnField(of => of.ReceivedAt).GreaterOrEquals("now-" + goBackBy)))
+            var response = _elasticClient.Search<MessageElasticModel>(s => s);
+            if(startDate.Length > 0 && endDate.Length > 0)
+            {
+                response = _elasticClient.Search<MessageElasticModel>(s => s
+                                                              .Query(q => q.Range(r => r.OnField(of => of.ReceivedAt).GreaterOrEquals(startDate).LowerOrEquals(endDate)))
+                                                              .Size(0)
+                                                              .Aggregations(a => a.DateHistogram("date_histogram", dh => dh
+                                                                                                                  .Field(f => f.ReceivedAt)
+                                                                                                                  .Interval(interval)
+                                                                                                                  .Aggregations(a2 => a2.SignificantTerms("significant_terss", st => st
+                                                                                                                                                                               .Field(f => f.Provider.Type)))))
+                                                             );
+            }
+            else if(startDate.Length>0 && endDate.Length < 1)
+            {
+                response = _elasticClient.Search<MessageElasticModel>(s => s
+                                                              .Query(q => q.Range(r => r.OnField(of => of.ReceivedAt).GreaterOrEquals(startDate).LowerOrEquals("now")))
+                                                              .Size(0)
+                                                              .Aggregations(a => a.DateHistogram("date_histogram", dh => dh
+                                                                                                                  .Field(f => f.ReceivedAt)
+                                                                                                                  .Interval(interval)
+                                                                                                                  .Aggregations(a2 => a2.SignificantTerms("significant_terss", st => st
+                                                                                                                                                                               .Field(f => f.Provider.Type)))))
+                                                             );
+            }
+            else if(endDate.Length > 0 && startDate.Length < 1 && goBackBy.Length < 1)
+            {
+                response = _elasticClient.Search<MessageElasticModel>(s => s
+                                                                      .Query(q => q.Range(r => r.OnField(of => of.ReceivedAt).GreaterOrEquals(endDate+"-1M/M").LowerOrEquals(endDate)))
                                                                       .Size(0)
                                                                       .Aggregations(a => a.DateHistogram("date_histogram", dh => dh
                                                                                                                           .Field(f => f.ReceivedAt)
@@ -93,9 +120,37 @@ namespace Part1.ApplicationLogic.Services
                                                                                                                           .Aggregations(a2 => a2.SignificantTerms("significant_terss", st => st
                                                                                                                                                                                        .Field(f => f.Provider.Type)))))
                                                                      );
+            }
+            else if(endDate.Length > 0 && startDate.Length < 1 && goBackBy.Length > 1)
+            {
+                response = _elasticClient.Search<MessageElasticModel>(s => s
+                                                                      .Query(q => q.Range(r => r.OnField(of => of.ReceivedAt).GreaterOrEquals("now-"+goBackBy).LowerOrEquals(endDate)))
+                                                                      .Size(0)
+                                                                      .Aggregations(a => a.DateHistogram("date_histogram", dh => dh
+                                                                                                                          .Field(f => f.ReceivedAt)
+                                                                                                                          .Interval(interval)
+                                                                                                                          .Aggregations(a2 => a2.SignificantTerms("significant_terss", st => st
+                                                                                                                                                                                       .Field(f => f.Provider.Type)))))
+                                                                     );
+            }
+            else
+            {
+                response = _elasticClient.Search<MessageElasticModel>(s => s
+                                                                 .Query(q => q.Range(r => r.OnField(of => of.ReceivedAt).GreaterOrEquals("now-" + goBackBy)))
+                                                                 .Size(0)
+                                                                 .Aggregations(a => a.DateHistogram("date_histogram", dh => dh
+                                                                                                                     .Field(f => f.ReceivedAt)
+                                                                                                                     .Interval(interval)
+                                                                                                                     .Aggregations(a2 => a2.SignificantTerms("significant_terss", st => st
+                                                                                                                                                                                  .Field(f => f.Provider.Type)))))
+                                                                );
+            }
+           
 
 
-                var aggs = response.Aggs.DateHistogram("date_histogram").Items;
+
+            
+            var aggs = response.Aggs.DateHistogram("date_histogram").Items;
                 var terms = aggs.Select(s => new MessageCountEntity
                 {
                     total_message = s.DocCount,
