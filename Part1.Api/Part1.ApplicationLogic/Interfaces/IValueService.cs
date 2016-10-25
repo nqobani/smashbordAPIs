@@ -17,7 +17,7 @@ namespace Part1.ApplicationLogic.Interfaces
     {
         ResultEntity GetMessageStats();
         IEnumerable<MessageCountEntity> GetMessageStat(string fromDate, string toDate);
-        IEnumerable<MessageCountEntity> GetMessageStats(String interval, string startDate, string endDate, String goBackBy);
+        IEnumerable<MessageCountEntity> GetMessageStats(String interval, string startDate, string endDate, String goBackBy, string providerType);
+        IEnumerable<UniqueUsersCountEntity> GetMessagesUniqueUsers(string userType, string startDate, string interval);
     }
-
 }

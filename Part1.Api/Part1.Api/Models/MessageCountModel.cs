@@ -32,4 +32,20 @@ namespace Part1.Api.Models
     }
 
 
+
+    ////Ntobeko////////Ntobeko////////Ntobeko////////Ntobeko////////Ntobeko////////Ntobeko////////Ntobeko////
+    public class UniqueUsersCountModel
+    {
+        public long AllDocs { get; set; }
+        public string Date { get; set; }
+        public IEnumerable<pTypeModel> providerTypes { get; set; }
+    }
+
+    public class pTypeModel
+    {
+        public string providerType { get; set; }
+        public long DocCount { get; set; }
+        public string number_of_users { get; set; }
+    }
+
 }

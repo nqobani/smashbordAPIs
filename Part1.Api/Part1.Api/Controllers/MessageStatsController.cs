@@ -6,10 +6,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.Web.Http;
 
 namespace Part1.Api.Controllers
 {
+
     [RoutePrefix("api/message")]
     public class MessageStatsController : ApiController
     {
@@ -49,17 +51,43 @@ namespace Part1.Api.Controllers
                 message_states = i.message_states
             });
         }
-
-        [Route("multRange")]
-        public IEnumerable<MessageCountEntity> GetMessageStats( string interval, string startDate="", string endDate="", string goBackBy= "1M")
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="interval"></param>
+        /// <param name="startDate">startDate is a staring point of the date range</param>
+        /// <param name="endDate"></param>
+        /// <param name="goBackBy"></param>
+        /// <param name="providerType"></param>
+        /// <returns></returns>
+        [Route("groupby_range")]
+        public IEnumerable<MessageCountEntity> GetMessageStats( string interval, string startDate="", string endDate="", string goBackBy= "", string providerType = "all")
         {
-            var results = _icountMessage.GetMessageStats(interval, startDate, endDate, goBackBy);
+            var results = _icountMessage.GetMessageStats(interval, startDate, endDate, goBackBy, providerType);
 
             return results.Select(i => new MessageCountEntity
             {
                 total_message = i.total_message,
                 date = i.date,
                 message_states = i.message_states
+            });
+        }
+        /// <summary>
+        /// This is itjhgj jvgjbn jgjvbj jgjhghj 
+        /// </summary>
+        /// <param name="userType">sedwseds</param>
+        /// <param name="startDate">sdsd</param>
+        /// <param name="interval">sdsdsds</param>
+        /// <returns></returns>
+        [Route("user")]
+        public IEnumerable<UniqueUsersCountEntity> GetMessagesUniqueUsers(string userType, string startDate="", string interval="month")
+        {
+            var results = _icountMessage.GetMessagesUniqueUsers(userType, startDate, interval);
+
+            return results.Select(s => new UniqueUsersCountEntity {
+                Date = s.Date,
+                AllDocs= s.AllDocs,
+                providerTypes = s.providerTypes
             });
         }
     }

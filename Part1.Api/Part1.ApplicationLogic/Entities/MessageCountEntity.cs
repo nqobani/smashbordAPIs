@@ -34,4 +34,19 @@ namespace Part1.ApplicationLogic.Entities
 
 
 
+
+    ////Ntobeko////////Ntobeko////////Ntobeko////////Ntobeko////////Ntobeko////////Ntobeko////////Ntobeko////
+    public class UniqueUsersCountEntity
+    {
+        public long AllDocs { get; set; }
+        public string Date { get; set; }
+        public IEnumerable<pTypeEntity> providerTypes { get; set; }
+    }
+
+    public class pTypeEntity
+    {
+        public string providerType { get; set; }
+        public long DocCount { get; set; }
+        public string number_of_users { get; set; }
+    }
 }
