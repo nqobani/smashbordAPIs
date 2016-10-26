@@ -49,4 +49,9 @@ namespace Part1.ApplicationLogic.Entities
         public long DocCount { get; set; }
         public string number_of_users { get; set; }
     }
+    public class tenantsEntity
+    {
+        public string key { get; set; }
+        public long docCount { get; set; }
+    }
 }

@@ -9,9 +9,14 @@ using Nest;
 using Owin;
 using Part1.Api.App_Start;
 using Part1.Data.EsModels;
+using Microsoft.Owin.Security.OAuth;
+using System.Threading.Tasks;
+using Microsoft.AspNet.Identity.EntityFramework;
+using System.Security.Claims;
+using Microsoft.AspNet.Identity;
+using System.ComponentModel.DataAnnotations;
 
 [assembly: OwinStartup(typeof(Part1.Api.Startup))]
-
 namespace Part1.Api
 {
     public partial class Startup
@@ -24,6 +29,7 @@ namespace Part1.Api
             var client = container.Resolve<IElasticClient>();
             EnsureIndices(client, "smashboard-messages");
         }
+
 
         private static void EnsureIndices(IElasticClient client, string indexName)
         {
@@ -50,5 +56,7 @@ namespace Part1.Api
             //Debug.WriteLine(r.RequestInformation.Success);
         }
     }
+
+
 }
 

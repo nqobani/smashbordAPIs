@@ -128,35 +128,53 @@ namespace Part1.ApplicationLogic.Services
                                                                   .Aggregations(a => a.DateHistogram("date_histogram", dh => dh
                                                                                                                       .Field(f => f.ReceivedAt)
                                                                                                                       .Interval(interval)
-                                                                                                                      .Aggregations(a2 => a2.SignificantTerms("significant_terss", st => st
+                                                                                                                      .Aggregations(a2 => a2.SignificantTerms("significant_terms", st => st
                                                                                                                                                                                    .Field(f => f.Provider.Type)))))
                                                                  );
             }
             else////With specified provider type///////With specified provider type///////With specified provider type///////With specified provider type///////With specified provider type///////With specified provider type///////With specified provider type///////With specified provider type///////With specified provider type///////With specified provider type///////With specified provider type///////With specified provider type///////With specified provider type///////With specified provider type///////With specified provider type///////With specified provider type///////With specified provider type///////With specified provider type///////With specified provider type///////With specified provider type///
             {
+                if(providerType.Length < 1)
+                {
                     response = _elasticClient.Search<MessageElasticModel>(s => s
                                                                   .Query(q => q.Range(r => r.OnField(of => of.ReceivedAt).GreaterOrEquals(startDate).LowerOrEquals(endDate)))
                                                                   .Size(0)
                                                                   .Aggregations(a => a.DateHistogram("date_histogram", dh => dh
                                                                                                                       .Field(f => f.ReceivedAt)
                                                                                                                       .Interval(interval)
-                                                                                                                      .Aggregations(a2 => a2.SignificantTerms("significant_terss", st => st
+                                                                                                                      .Aggregations(a2 => a2.SignificantTerms("significant_terms", st => st
                                                                                                                                                                                    .Field(f => f.Provider.Type)))))
                                                                  );
+                }
+                else
+                {
+                    response = _elasticClient.Search<MessageElasticModel>(s => s
+                           .Query(q => q
+                           .Bool(b => b
+                           .Must(
+                               m => m.Range(r => r.OnField(n => n.ReceivedAt).GreaterOrEquals(startDate).LowerOrEquals(endDate)),
+                               m => m.Match(d => d.OnField("provider.type").Query(providerType.ToLower())))
+                               ))
+                          .Size(0)
+                          .Aggregations(a => a.DateHistogram("date_histogram", h => h.Field(m => m.ReceivedAt)
+                                                                                    .Interval(interval)
+                                             .Aggregations(v => v.SignificantTerms("significant_terms", p => p.Field(x => x.Provider.Type))))));
+                }
+                    
 
             }
-            
-           
 
 
 
             
+
+
             var aggs = response.Aggs.DateHistogram("date_histogram").Items;
                 var terms = aggs.Select(s => new MessageCountEntity
                 {
                     total_message = s.DocCount,
                     date = s.Date,
-                    message_states = s.SignificantTerms("significant_terss").Items
+                    message_states = s.SignificantTerms("significant_terms").Items
                                      .Select(ss => new range_buckets
                                      {
                                          key = ss.Key,
@@ -168,6 +186,8 @@ namespace Part1.ApplicationLogic.Services
         //Ntobeko////Ntobeko////Ntobeko////Ntobeko////Ntobeko////Ntobeko////Ntobeko////Ntobeko////Ntobeko////Ntobeko////Ntobeko////Ntobeko//
         public IEnumerable<UniqueUsersCountEntity> GetMessagesUniqueUsers(string userType, string startDate, string interval)
         {
+            
+
 
             if (startDate.Equals(""))
             {
@@ -178,18 +198,44 @@ namespace Part1.ApplicationLogic.Services
             {
                 interval = "week";
             }
-            var response = _elasticClient.Search<MessageElasticModel>(s => s
-                                                                    .Query(q => q.Range(r => r.OnField(m => m.ReceivedAt).GreaterOrEquals(startDate)))
-                                                                                 .Size(0)
-                                                                                 .Aggregations(a => a.DateHistogram("dateHistogram", b => b
-                                                                                                                                   .Field(v => v.ReceivedAt)
-                                                                                                                                           .Interval(interval)
-                                                                                                                                            .Aggregations(m => m
-                                                                                                                                                          .Terms("ProviderTypes", d => d
-                                                                                                                                                                                    .Field(f => f.Provider.Type)
-                                                                                                                                                                                    .Aggregations(n => n
-                                                                                                                                                                                                   .Cardinality("unique_users", c => c.Field(e => e.Source.Name)))))))
-                                                                          );
+            var response = _elasticClient.Search<MessageElasticModel>(s => s);
+            if(userType.Length <1 || userType.Equals("all"))
+            {
+                response = _elasticClient.Search<MessageElasticModel>(s => s
+                                                        .Query(q => q.Range(r => r.OnField(m => m.ReceivedAt).GreaterOrEquals(startDate)))
+                                                                     .Size(0)
+                                                                     .Aggregations(a => a.DateHistogram("dateHistogram", b => b
+                                                                                                                       .Field(v => v.ReceivedAt)
+                                                                                                                               .Interval(interval)
+                                                                                                                                .Aggregations(m => m
+                                                                                                                                              .Terms("ProviderTypes", d => d
+                                                                                                                                                                        .Field(f => f.Provider.Type)
+                                                                                                                                                                        .Aggregations(n => n
+                                                                                                                                                                                       .Cardinality("unique_users", c => c.Field(e => e.Source.Name)))))))
+                                                              );
+            }
+            else
+            {
+                response = _elasticClient.Search<MessageElasticModel>(s => s
+                                                                .Query(q => q
+                                                                       .Bool(b => b
+                                                                             .Must(
+                                                                                m => m.Range(r => r.OnField(f => f.ReceivedAt).GreaterOrEquals(startDate)),
+                                                                                m => m.Match(r => r.OnField(f => f.Provider.Type).Query(userType.ToLower())))))
+                                                                .Size(0)
+                                                                .Aggregations(a => a.DateHistogram("dateHistogram", b => b
+                                                                                                                                  .Field(v => v.ReceivedAt)
+                                                                                                                                          .Interval(interval)
+                                                                                                                                           .Aggregations(m => m
+                                                                                                                                                         .Terms("ProviderTypes", d => d
+                                                                                                                                                                                   .Field(f => f.Provider.Type)
+                                                                                                                                                                                   .Aggregations(n => n
+                                                                                                                                                                                                  .Cardinality("unique_users", c => c.Field(e => e.Source.Name)))))))
+
+                                                                 );
+            }
+
+
 
             var agg = response.Aggs.DateHistogram("dateHistogram").Items;
             var items = agg.Select(i => new UniqueUsersCountEntity
@@ -204,6 +250,34 @@ namespace Part1.ApplicationLogic.Services
                     number_of_users = b.Cardinality("unique_users").Value + ""
 
                 })
+            });
+            return items;
+        }
+
+
+
+
+
+        public IEnumerable<tenantsEntity> GetByTenant(string startingPoint)
+        {
+            if (startingPoint.Equals(""))
+            {
+                startingPoint = DateTime.Now.Year.ToString() + "-01-01";
+            }
+
+            var result = _elasticClient.Search<MessageElasticModel>(s => s
+                           .Query(z => z.Range(r => r.OnField(m => m.ReceivedAt).GreaterOrEquals(startingPoint)))
+                           .Size(0)
+                           .Aggregations(na => na
+                                    .Terms("tenant", st => st
+                                        .Field(o => o.TenantId))));
+
+            var TenantCount = result.Aggs.Terms("tenant").Items;
+            var items = TenantCount.Select(i => new tenantsEntity
+            {
+                key = i.Key + "",
+                docCount = i.DocCount
+
             });
             return items;
         }
