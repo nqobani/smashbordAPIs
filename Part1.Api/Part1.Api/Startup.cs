@@ -25,7 +25,7 @@ namespace Part1.Api
     {
         public void Configuration(IAppBuilder app)
         {
-            var authIssuer = "http://alchemy-auth-dev.azurewebsites.net/";
+            var authIssuer = "http://alchemy-auth-dev.azurewebsites.net";
             var authAudienceId = "256d2a8b-74e8-4b8d-a49c-d99f79a129b2";
             var authAudienceSecret = TextEncodings.Base64Url.Decode("1hG3cPkgw8us1VpHxuWQdhDm2JiHQRVGSbicOCts_7y9WD1p6dQu3BKZ69-0BCw_rXU4G06M9wHtkF1dl3VCbA");
 

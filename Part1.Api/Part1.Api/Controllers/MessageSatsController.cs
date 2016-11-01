@@ -13,11 +13,11 @@ namespace Part1.Api.Controllers
 {
 
     [RoutePrefix("api")]
-    public class MessageStatsController : ApiController
+    public class MessageController : ApiController
     {
         private readonly ICountMessages _icountMessage;
 
-        public MessageStatsController(ICountMessages icountMessage)
+        public MessageController(ICountMessages icountMessage)
         {
             _icountMessage = icountMessage;
         }
@@ -28,9 +28,9 @@ namespace Part1.Api.Controllers
         /// <param name="endDate">endDate is an ending point of the date range. Also in the format: YYYY-MM-DD, It must be a date after the date in startDate. </param>
         /// <returns></returns>
         [Route("messages/all")]
-        public IEnumerable<MessageCountEntity> GetMessageStat(string starDate = "now-24H/H", string endDate = "now")
+        public IEnumerable<MessageCountEntity> GetMessageStat(string startDate = "now-24H/H", string endDate = "now")
         {
-            var results = _icountMessage.GetMessageStat(starDate, endDate);
+            var results = _icountMessage.GetMessageStat(startDate, endDate);
 
             return results.Select(i => new MessageCountEntity
             {
@@ -49,10 +49,11 @@ namespace Part1.Api.Controllers
         /// <param name="goBackBy">getBackBy works well will time/date abbreviations( h >> Hour in 12hours time, H >>Hour in 24Hours time, w >> week, etc) to specify the time to go back by(e.g. goBackBy=3M - The starting point will be this month/now minus 3 months)</param>
         /// <param name="providerType">providerType stands for the type of messages to be return either <b>sms, chat, twitter or facebook</b> the default is All messages</param>
         /// <returns></returns>
-        ///
+         //[Authorize]
         [Route("messages/compare")]
         public IEnumerable<MessageCountEntity> GetMessageStats(string interval, string startDate = "", string endDate = "", string goBackBy = "", string providerType = "all")
         {
+            var l = User.Identity;
             var results = _icountMessage.GetMessageStats(interval, startDate, endDate, goBackBy, providerType);
 
             return results.Select(i => new MessageCountEntity
@@ -69,7 +70,6 @@ namespace Part1.Api.Controllers
         /// <param name="startDate">startDate is a starting point of the date range. It start from a date specified in startDate</param>
         /// <param name="interval">interval works as group by. It can be used to group the result by hour, day, week, month, year etc.</param>
         /// <returns></returns>
-        /// 
         [Route("messages/user")]
         public IEnumerable<UniqueUsersCountEntity> GetMessagesUniqueUsers(string userType, string startDate = "", string interval = "month")
         {
@@ -87,11 +87,12 @@ namespace Part1.Api.Controllers
         [Route("tenants")]
         public IEnumerable<tenantsEntity> GetStatsByTenant(string startingPoint = "")
         {
+            var i = User.Identity;
             var t = _icountMessage.GetByTenant(startingPoint);
-            return t.Select(i => new tenantsEntity
+            return t.Select(j => new tenantsEntity
             {
-                key = i.key,
-                docCount = i.docCount
+                key = j.key,
+                docCount = j.docCount
             });
         }
     }
