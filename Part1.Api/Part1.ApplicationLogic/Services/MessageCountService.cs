@@ -19,8 +19,7 @@ namespace Part1.ApplicationLogic.Services
             _elasticClient = client;
         }
 
-
-        public IEnumerable<MessageCountEntity> GetMessageStat(string fromDate = "now-24H/H", string toDate = "now")
+        public IEnumerable<MessageStatsEntity> GetMessageStat(string fromDate = "now-24H/H", string toDate = "now")
         {
             var response = _elasticClient.Search<MessageElasticModel>(s => s
                                                                         .Aggregations(a => a
@@ -35,8 +34,7 @@ namespace Part1.ApplicationLogic.Services
 
             var agg = response.Aggs.DateRange("date_range").Items;
 
-
-            var items = agg.Select(i => new MessageCountEntity
+            var items = agg.Select(i => new MessageStatsEntity
             {
                 total_message = i.DocCount,
                 message_states = i.Terms("signifint_terms").Items
@@ -51,7 +49,7 @@ namespace Part1.ApplicationLogic.Services
             return items;
         }
 
-        public IEnumerable<MessageCountEntity> GetMessageStats(String interval, string startDate, string endDate, String goBackBy, string providerType /* goBackBy>> This variable will contain time(period) that the aggrigation will have to start from */)
+        public IEnumerable<MessageCountEntity> GetMessageStats(string interval, string startDate, string endDate, string goBackBy, string mustNot, string providerType /* goBackBy>> This variable will contain time(period) that the aggrigation will have to start from */)
         {
 
             
@@ -67,7 +65,17 @@ namespace Part1.ApplicationLogic.Services
                 }
                 if (endDate.Length < 1)
                 {
-                    endDate = System.DateTime.Now.Year + "-" + System.DateTime.Now.Month + "-" + System.DateTime.Now.Day;
+                    int day = System.DateTime.Now.Day;
+                    String ds = "0";;
+                    if (day < 20) {
+                        ds = "0" + day;
+                    }
+                    else
+                    {
+                        ds = day + "";
+                    }
+
+                    endDate = System.DateTime.Now.Year + "-" + System.DateTime.Now.Month + "-" + ds;
                 }
                 
             }
@@ -90,7 +98,27 @@ namespace Part1.ApplicationLogic.Services
 
             interval = interval.ToLower();
             var response = _elasticClient.Search<MessageElasticModel>(s => s);
+            //if((mustNot.Split(',').Length>0|| providerType.Split(',').Length > 1)&& !providerType.ToLower().Contains("all"))
+            //{
+            //    if(mustNot.Length>0 || providerType.Split(',').Length > 1)
+            //    {
 
+                
+            //    var results = Mult_MessageType(interval, startDate, endDate, goBackBy, mustNot, providerType);
+            //    var aggss = results.Aggs.DateHistogram("date_histogram").Items;
+            //    var termss = aggss.Select(s => new MessageCountEntity
+            //    {
+            //        total_message = s.DocCount,
+            //        date = s.Date,
+            //        message_states = s.Terms("significant_terms").Items
+            //                         .Select(ss => new range_buckets
+            //                         {
+            //                             key = ss.Key,
+            //                             messages = ss.DocCount
+            //                         })
+            //    });
+            //    return termss;}
+            //}
             if (providerType.Length < 0)
             {
                     response = _elasticClient.Search<MessageElasticModel>(s => s
@@ -99,7 +127,7 @@ namespace Part1.ApplicationLogic.Services
                                                                   .Aggregations(a => a.DateHistogram("date_histogram", dh => dh
                                                                                                                       .Field(f => f.ReceivedAt)
                                                                                                                       .Interval(interval)
-                                                                                                                      .Aggregations(a2 => a2.SignificantTerms("significant_terms", st => st
+                                                                                                                      .Aggregations(a2 => a2.Terms("significant_terms", st => st
                                                                                                                                                                                    .Field(f => f.Provider.Type)))))
                                                                  );
             }
@@ -113,7 +141,7 @@ namespace Part1.ApplicationLogic.Services
                                                                   .Aggregations(a => a.DateHistogram("date_histogram", dh => dh
                                                                                                                       .Field(f => f.ReceivedAt)
                                                                                                                       .Interval(interval)
-                                                                                                                      .Aggregations(a2 => a2.SignificantTerms("significant_terms", st => st
+                                                                                                                      .Aggregations(a2 => a2.Terms("significant_terms", st => st
                                                                                                                                                                                    .Field(f => f.Provider.Type)))))
                                                                  );
                 }
@@ -129,15 +157,16 @@ namespace Part1.ApplicationLogic.Services
                           .Size(0)
                           .Aggregations(a => a.DateHistogram("date_histogram", h => h.Field(m => m.ReceivedAt)
                                                                                     .Interval(interval)
-                                             .Aggregations(v => v.SignificantTerms("significant_terms", p => p.Field(x => x.Provider.Type))))));
+                                             .Aggregations(v => v.Terms("significant_terms", p => p.Field(x => x.Provider.Type))))));
                 }
                     
 
             }
 
 
-
             
+
+
 
 
             var aggs = response.Aggs.DateHistogram("date_histogram").Items;
@@ -145,7 +174,7 @@ namespace Part1.ApplicationLogic.Services
                 {
                     total_message = s.DocCount,
                     date = s.Date,
-                    message_states = s.SignificantTerms("significant_terms").Items
+                    message_states = s.Terms("significant_terms").Items
                                      .Select(ss => new range_buckets
                                      {
                                          key = ss.Key,
@@ -225,9 +254,191 @@ namespace Part1.ApplicationLogic.Services
             return items;
         }
 
+        public ISearchResponse<MessageElasticModel> Mult_MessageType(string interval, string startDate, string endDate, string goBackBy, string mustNot, string providerType)
+        {
+            int[] provider = new int[4];
+            string[] providerTypes = { "facebook", "chat", "sms", "twitter" };
+            string[] toMatch = providerType.Split(',');
+            string[] notToMath = mustNot.Split(',');
+            if (mustNot.Length > 0 && toMatch.Length<1)
+            {
+                int countNotToMatch = notToMath.Length;
+                toMatch = new string[4-countNotToMatch];
 
+                        if (mustNot.Contains("facebook"))
+                        {
+                            provider[0] = 0;
+                        }
+                        else
+                        {
+                            provider[0] = 1;
+                        }
+                        if (mustNot.Contains("chat"))
+                        {
+                            provider[1] = 0;
+                        }
+                        else
+                        {
+                            provider[1] = 1;
+                        }
+                        if (mustNot.Contains("sms"))
+                        {
+                            provider[2] = 0;
+                        }
+                        else
+                        {
+                            provider[2] = 1;
+                        }
+                        if (mustNot.Contains("twitter"))
+                        {
+                            provider[3] = 0;
+                        }
+                        else
+                        {
+                            provider[3] = 1;
+                        }
+                int inner_Count = 0;
+                for (int i = 0; i < provider.Length; i++)
+                {
+                    if (provider[i] == 1)
+                    {
+                        toMatch[inner_Count] = providerTypes[i];
+                        inner_Count++;
+                    }
+                }
+            }
 
+            int count = 0;
+            if (toMatch.Contains("facebook"))
+            {
+                provider[0] = 1;
+                count++;
+            }
+            else
+            {
+                provider[0] = 0;
+            }
+            if(toMatch.Contains("chat"))
+            {
+                provider[1] = 1;
+                count++;
+            }
+            else
+            {
+                provider[1] = 0;
+            }
+            if(toMatch.Contains("sms"))
+            {
+                provider[2] = 1;
+                count++;
+            }
+            else
+            {
+                provider[2] = 0;
+            }
+            if(toMatch.Contains("twitter"))
+            {
+                provider[3] = 1;
+                count++;
+            }
+            else
+            {
+                provider[3] = 0;
+            }
+            string[] not_to_match = new string[4 - count];
+            int innerCount = 0;
+            for (int i = 0;i<provider.Length;i++)
+            {
+                if(provider[i] == 0)
+                {
+                    not_to_match[innerCount] = providerTypes[i];
+                    innerCount++;
+                }
+            }
 
+            var response = _elasticClient.Search<MessageElasticModel>(s => s);
+
+            if (toMatch.Length == 1)
+            {
+                response = _elasticClient.Search<MessageElasticModel>(s => s
+                           .Query(q => q
+                           .Bool(b => b
+                           .Must(
+                               m => m.Range(r => r.OnField(n => n.ReceivedAt).GreaterOrEquals(startDate).LowerOrEquals(endDate))
+                               )
+                            .Should(
+                               m => m.Match(d => d.OnField("provider.type").Query(toMatch[0]))
+                              )
+                              .MustNot(
+                               m => m.Match(d => d.OnField("provider.type").Query(not_to_match[0])),
+                               m => m.Match(d => d.OnField("provider.type").Query(not_to_match[1])),
+                               m => m.Match(d => d.OnField("provider.type").Query(not_to_match[2]))
+                               )
+                               ))
+                               .Size(0)
+                               .Aggregations(a => a.DateHistogram("date_histogram", h => h.Field(m => m.ReceivedAt)
+                                                                                    .Interval(interval)
+                                             .Aggregations(v => v.Terms("significant_terms", p => p.Field(x => x.Provider.Type))))));
+            }
+            else if (toMatch.Length == 2)
+            {
+                response = _elasticClient.Search<MessageElasticModel>(s => s
+                           .Query(q => q
+                           .Bool(b => b
+                           .Must(
+                               m => m.Range(r => r.OnField(n => n.ReceivedAt).GreaterOrEquals(startDate).LowerOrEquals(endDate))
+                               )
+                            .Should(
+                               m => m.Match(d => d.OnField("provider.type").Query(toMatch[0])),
+                               m => m.Match(d => d.OnField("provider.type").Query(toMatch[1]))
+                              )
+                              .MustNot(
+                               m => m.Match(d => d.OnField("provider.type").Query(not_to_match[0])),
+                               m => m.Match(d => d.OnField("provider.type").Query(not_to_match[1]))
+                               )
+                               ))
+                               .Size(0)
+                               .Aggregations(a => a.DateHistogram("date_histogram", h => h.Field(m => m.ReceivedAt)
+                                                                                    .Interval(interval)
+                                             .Aggregations(v => v.Terms("significant_terms", p => p.Field(x => x.Provider.Type))))));
+            }
+            else if(toMatch.Length == 3)
+            {
+                response = _elasticClient.Search<MessageElasticModel>(s => s
+                           .Query(q => q
+                           .Bool(b => b
+                           .Must(
+                               m => m.Range(r => r.OnField(n => n.ReceivedAt).GreaterOrEquals(startDate).LowerOrEquals(endDate))
+                               )
+                            .Should(
+                               m => m.Match(d => d.OnField("provider.type").Query(toMatch[0])),
+                               m => m.Match(d => d.OnField("provider.type").Query(toMatch[1])),
+                               m => m.Match(d => d.OnField("provider.type").Query(toMatch[2]))
+                              )
+                              .MustNot(
+                               m => m.Match(d => d.OnField("provider.type").Query(not_to_match[0]))
+                               )
+                               ))
+                               .Size(0)
+                               .Aggregations(a => a.DateHistogram("date_histogram", h => h.Field(m => m.ReceivedAt)
+                                                                                    .Interval(interval)
+                                             .Aggregations(v => v.Terms("significant_terms", p => p.Field(x => x.Provider.Type))))));
+            }
+            else{
+                response = _elasticClient.Search<MessageElasticModel>(s => s
+                           .Query(q => q
+                           .Bool(b => b
+                           .Must(
+                               m => m.Range(r => r.OnField(n => n.ReceivedAt).GreaterOrEquals(startDate).LowerOrEquals(endDate))
+                               )
+                               ))
+                               .Size(0)
+                               .Aggregations(a => a.DateHistogram("date_histogram", h => h.Field(m => m.ReceivedAt)
+                                                                                    .Interval(interval)
+                                             .Aggregations(v => v.Terms("significant_terms", p => p.Field(x => x.Provider.Type))))));
+            }
+            return response;
+        }
 
         public IEnumerable<tenantsEntity> GetByTenant(string startingPoint)
         {

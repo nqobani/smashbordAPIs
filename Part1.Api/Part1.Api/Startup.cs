@@ -17,6 +17,7 @@ using Microsoft.AspNet.Identity;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.Owin.Security.DataHandler.Encoder;
 using Microsoft.Owin.Security.Jwt;
+using Part1.Api.Providers;
 
 [assembly: OwinStartup(typeof(Part1.Api.Startup))]
 namespace Part1.Api

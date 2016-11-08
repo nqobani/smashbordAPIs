@@ -13,6 +13,12 @@ namespace Part1.ApplicationLogic.Entities
         public IEnumerable<range_buckets> message_states { set; get; }
 
     }
+    public class MessageStatsEntity
+    {
+        public long total_message { get; set; }
+        public IEnumerable<range_buckets> message_states { set; get; }
+
+    }
 
     public class range_buckets
     {
