@@ -71,6 +71,7 @@
     <Compile Include="Entities\MessageCountEntity.cs" />
     <Compile Include="Interfaces\IValueService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ServiceHelper\ServiceHelperClass.cs" />
     <Compile Include="Services\MessageCountService.cs" />
     <Compile Include="Services\ValueService.cs" />
   </ItemGroup>

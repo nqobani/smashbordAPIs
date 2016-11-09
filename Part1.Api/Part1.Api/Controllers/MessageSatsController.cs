@@ -48,8 +48,8 @@ namespace Part1.Api.Controllers
         /// </param>
         /// <param name="endDate">Is similar to startDate, the only difference is that it is the ending point of the date range.You must make sure that it is always a date after the startDate</param>
         /// <param name="goBackBy">getBackBy works well will time/date abbreviations( h >> Hour in 12hours time, H >>Hour in 24Hours time, w >> week, etc) to specify the time to go back by(e.g. goBackBy=3M - The starting point will be this month/now minus 3 months)</param>
-        /// <param name="providerType">providerType stands for the type of messages to be return either <b>sms, chat, twitter or facebook</b> the default is All messages. If you want to get data about multiple message type, put multiple meggage types and seperate them by a comma',' for example: chat,facebook - the will return chat and facebook stats > it won't incude twitter and sms stats</param>
-        ///<param name="mustNotMath">If you can specify what you want, why not specify what you don't want. Using the same rules as for providerType, you can specify the type of message you want to exclude from the response. for example: if you can put sms,chat the response will not include those two.</param>
+        /// <param name="providerType">ProviderType allow you to get stats for a/the specific provider type/s. There are four provider types: facebook, twitter, chat and sms. You can specicy a single providerType or multiple providerTypes seperated by a comma(',') for example: facebook,chat,sms or you can just put all if you want them all</param>
+        ///<param name="mustNotMath">It take a list ot providerTypes seperated by a comma(',') for example: sms,chat,facebook... The providerTypes you pass in this paremeter won't be included in the response/stats</param>
         /// <returns></returns>
         /// 
 
@@ -69,16 +69,17 @@ namespace Part1.Api.Controllers
         /// <summary>
         /// GET the number of user on each provider type based on a time range and grouped by hour, month, day, etc.
         /// </summary>
-        /// <param name="userType">TypeOfUser can be facebook, twitter, sms, chat, or all. "all" being all user types</param>
-        /// <param name="startDate">startDate is a starting point of the date range. It start from a date specified in startDate</param>
-        /// <param name="interval">interval works as group by. It can be used to group the result by hour, day, week, month, year etc.</param>
+        /// <param name="userType">TypeOfUser can be facebook, twitter, sms, chat, or all. "all" will return the stats about all user types</param>
+        /// <param name="startDate">startDate is a starting point of the date range. It takes in the date in this format: YYYY-MM-DD for example: 2016-10-22. If it is not specified, it will default to the first day of the current year</param>
+        /// <param name="interval">interval works as group by. It can be used to group the result by hour, day, week, month, year etc. The default is week.</param>
+        /// <param name="endDate">endDate is the ending point of the date range. It takes in the date in this format: YYYY-MM-DD for example: 2016-10-22. If it is not specified, it will default to the current date</param>
+        /// <param name="excludeUserType">Takes in a list of user types seperated by a comma(',') for example: sms,chat,facebook... the user types specified in this field will not be included in the response.<br>NOTE: all is not supported</br></param>
         /// <returns></returns>
         /// 
-        [Authorize]
         [Route("messages/user")]
-        public IEnumerable<UniqueUsersCountEntity> GetMessagesUniqueUsers(string userType, string startDate = "", string interval = "month")
+        public IEnumerable<UniqueUsersCountEntity> GetMessagesUniqueUsers(string userType,string excludeUserType="", string startDate = "", string endDate="", string interval = "month")
         {
-            var results = _icountMessage.GetMessagesUniqueUsers(userType, startDate, interval);
+            var results = _icountMessage.GetMessagesUniqueUsers(userType, excludeUserType, startDate, endDate, interval);
 
             return results.Select(s => new UniqueUsersCountEntity
             {
@@ -87,7 +88,6 @@ namespace Part1.Api.Controllers
                 providerTypes = s.providerTypes
             });
         }
-
         [Authorize]
         [Route("tenants")]
         public IEnumerable<tenantsEntity> GetStatsByTenant(string startingPoint = "")
