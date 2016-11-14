@@ -8,6 +8,7 @@ using Part1.ApplicationLogic.Entities;
 using Nest;
 using Part1.Data.EsModels;
 using Part1.ApplicationLogic.ServiceHelper;
+using System.Net;
 
 namespace Part1.ApplicationLogic.Services
 {
@@ -54,7 +55,10 @@ namespace Part1.ApplicationLogic.Services
 
         public IEnumerable<MessageCountEntity> GetMessageStats(string interval, string startDate, string endDate, string goBackBy, string mustNot, string providerType /* goBackBy>> This variable will contain time(period) that the aggrigation will have to start from */)
         {
+            try
+            {
 
+            
             
             if (goBackBy.Equals(""))
             {
@@ -184,6 +188,11 @@ namespace Part1.ApplicationLogic.Services
                                      })
                 });
                 return terms;
+            }
+            catch (Exception dc)
+            {
+                throw dc;
+            }
         }
         //Ntobeko////Ntobeko////Ntobeko////Ntobeko////Ntobeko////Ntobeko////Ntobeko////Ntobeko////Ntobeko////Ntobeko////Ntobeko////Ntobeko//
         public IEnumerable<UniqueUsersCountEntity> GetMessagesUniqueUsers(string userType, string excludeUserType, string startDate,string endDate, string interval)

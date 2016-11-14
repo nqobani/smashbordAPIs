@@ -52,19 +52,35 @@ namespace Part1.Api.Controllers
         ///<param name="mustNotMath">It take a list ot providerTypes seperated by a comma(',') for example: sms,chat,facebook... The providerTypes you pass in this paremeter won't be included in the response/stats</param>
         /// <returns></returns>
         /// 
-
+        [Authorize]
         [Route("messages/compare")]
         public IEnumerable<MessageCountEntity> GetMessageStats(string interval, string startDate = "", string endDate = "", string goBackBy = "",string mustNotMath = "", string providerType = "all")
         {
             var l = User.Identity;
-            var results = _icountMessage.GetMessageStats( interval,  startDate,  endDate,  goBackBy,  mustNotMath,  providerType);
+            
+            //try
+            //{
 
+                DateTime startD = Convert.ToDateTime(startDate);
+                DateTime endD = Convert.ToDateTime(endDate);
+                if(startD>endD)
+                {
+                    throw new HttpResponseException(HttpStatusCode.BadRequest);
+                }
+            //}
+            //catch(Exception)
+            //{
+            //    throw new HttpResponseException(HttpStatusCode.NotFound);
+            //}
+
+            var results = _icountMessage.GetMessageStats(interval, startDate, endDate, goBackBy, mustNotMath, providerType);
             return results.Select(i => new MessageCountEntity
             {
                 total_message = i.total_message,
                 date = i.date,
                 message_states = i.message_states
             });
+
         }
         /// <summary>
         /// GET the number of user on each provider type based on a time range and grouped by hour, month, day, etc.
