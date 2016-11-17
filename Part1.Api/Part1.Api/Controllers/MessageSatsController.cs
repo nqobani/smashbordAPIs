@@ -52,24 +52,43 @@ namespace Part1.Api.Controllers
         ///<param name="mustNotMath">It take a list ot providerTypes seperated by a comma(',') for example: sms,chat,facebook... The providerTypes you pass in this paremeter won't be included in the response/stats</param>
         /// <returns></returns>
         /// 
-        [Authorize]
         [Route("messages/compare")]
         public IEnumerable<MessageCountEntity> GetMessageStats(string interval, string startDate = "", string endDate = "", string goBackBy = "",string mustNotMath = "", string providerType = "all")
         {
             var l = User.Identity;
-            
+
             //try
             //{
 
-                DateTime startD = Convert.ToDateTime(startDate);
-                DateTime endD = Convert.ToDateTime(endDate);
-                if(startD>endD)
+            if (interval.Equals("")|| interval.Equals(null))
+            {
+                var resp = new HttpResponseMessage(HttpStatusCode.NotFound)
                 {
-                    throw new HttpResponseException(HttpStatusCode.BadRequest);
-                }
+                    Content = new StringContent(string.Format("Response: 'Invalid request: interval can not be null'")),
+                    ReasonPhrase = "Reason:'Interval can not be null...'"
+                };
+                throw new HttpResponseException(resp);
+            }
+            //DateTime startD = Convert.ToDateTime(startDate);
+            //    DateTime endD = Convert.ToDateTime(endDate);
+            //    if(startD>endD)
+            //    {
+            //        var resp = new HttpResponseMessage(HttpStatusCode.NotFound)
+            //        {
+            //            Content = new StringContent(string.Format("Response: 'Invalid date range'")),
+            //            ReasonPhrase = "Reason:'The end date can on be a date before the start date'"
+            //        };
+            //        throw new HttpResponseException(resp);
+            //    }
+            
             //}
-            //catch(Exception)
+            //catch (Exception)
             //{
+            //    var errorCause = new HttpResponseMessage(HttpStatusCode.NotFound)
+            //    {
+            //        Content = new StringContent(string.Format("Invalid Invalid request, Make sure that you inputs are correct, the required field is not null/empty and parameter name are correct")),
+            //        ReasonPhrase = "The end date can on be a date before the start date"
+            //    };
             //    throw new HttpResponseException(HttpStatusCode.NotFound);
             //}
 

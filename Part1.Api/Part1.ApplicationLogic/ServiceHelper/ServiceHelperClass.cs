@@ -326,10 +326,6 @@ namespace Part1.ApplicationLogic.ServiceHelper
             }
             else if (toMatch.Length == 3)
             {
-
-            }
-            else
-            {
                 response = _elasticClient.Search<MessageElasticModel>(s => s
                                                                                     .Query(q => q
                                                                                             .Bool(b => b
@@ -340,6 +336,29 @@ namespace Part1.ApplicationLogic.ServiceHelper
                                                                                                        m => m.Match(r => r.OnField(f => f.Provider.Type).Query(toMatch[2])))
                                                                                                   .MustNot(
                                                                                                         m => m.Match(r => r.OnField(f => f.Provider.Type).Query(not_to_match[0])))
+                                                                                                   ))
+                                                                                                   .Size(0)
+                                                                                                   .Aggregations(a => a.DateHistogram("dateHistogram", b => b
+                                                                                                                                       .Field(v => v.ReceivedAt)
+                                                                                                                                               .Interval(interval)
+                                                                                                                                                .Aggregations(m => m
+                                                                                                                                                              .Terms("ProviderTypes", d => d
+                                                                                                                                                                                        .Field(f => f.Provider.Type)
+                                                                                                                                                                                        .Aggregations(n => n
+                                                                                                                                                                                                       .Cardinality("unique_users", c => c.Field(e => e.Source.Name)))))))
+                                                                                        );
+            }
+            else
+            {
+                response = _elasticClient.Search<MessageElasticModel>(s => s
+                                                                                    .Query(q => q
+                                                                                            .Bool(b => b
+                                                                                                   .Must(m => m.Range(r => r.OnField(f => f.ReceivedAt).GreaterOrEquals(startDate).LowerOrEquals(endDate)))
+                                                                                                   .Should(
+                                                                                                       m => m.Match(r => r.OnField(f => f.Provider.Type).Query(toMatch[0])),
+                                                                                                       m => m.Match(r => r.OnField(f => f.Provider.Type).Query(toMatch[1])),
+                                                                                                       m => m.Match(r => r.OnField(f => f.Provider.Type).Query(toMatch[2])),
+                                                                                                       m => m.Match(r => r.OnField(f => f.Provider.Type).Query(not_to_match[3])))
                                                                                                    ))
                                                                                                    .Size(0)
                                                                                                    .Aggregations(a => a.DateHistogram("dateHistogram", b => b

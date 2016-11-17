@@ -74,7 +74,7 @@ namespace Part1.ApplicationLogic.Services
                 {
                     int day = System.DateTime.Now.Day;
                     String ds = "0";;
-                    if (day < 20) {
+                    if (day < 10) {
                         ds = "0" + day;
                     }
                     else
