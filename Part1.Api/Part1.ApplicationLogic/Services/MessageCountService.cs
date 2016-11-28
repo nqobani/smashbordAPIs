@@ -55,8 +55,8 @@ namespace Part1.ApplicationLogic.Services
 
         public IEnumerable<MessageCountEntity> GetMessageStats(string interval, string startDate, string endDate, string goBackBy, string mustNot, string providerType /* goBackBy>> This variable will contain time(period) that the aggrigation will have to start from */)
         {
-            try
-            {
+            //try
+            //{
 
             
             
@@ -188,11 +188,11 @@ namespace Part1.ApplicationLogic.Services
                                      })
                 });
                 return terms;
-            }
-            catch (Exception dc)
-            {
-                throw dc;
-            }
+            //}
+            //catch (Exception dc)
+            //{
+            //    throw dc;
+            //}
         }
         //Ntobeko////Ntobeko////Ntobeko////Ntobeko////Ntobeko////Ntobeko////Ntobeko////Ntobeko////Ntobeko////Ntobeko////Ntobeko////Ntobeko//
         public IEnumerable<UniqueUsersCountEntity> GetMessagesUniqueUsers(string userType, string excludeUserType, string startDate,string endDate, string interval)
@@ -297,28 +297,5 @@ namespace Part1.ApplicationLogic.Services
             return items;
         }
 
-        public IEnumerable<tenantsEntity> GetByTenant(string startingPoint)
-        {
-            if (startingPoint.Equals(""))
-            {
-                startingPoint = DateTime.Now.Year.ToString() + "-01-01";
-            }
-
-            var result = _elasticClient.Search<MessageElasticModel>(s => s
-                           .Query(z => z.Range(r => r.OnField(m => m.ReceivedAt).GreaterOrEquals(startingPoint)))
-                           .Size(0)
-                           .Aggregations(na => na
-                                    .Terms("tenant", st => st
-                                        .Field(o => o.TenantId))));
-
-            var TenantCount = result.Aggs.Terms("tenant").Items;
-            var items = TenantCount.Select(i => new tenantsEntity
-            {
-                key = i.Key + "",
-                docCount = i.DocCount
-
-            });
-            return items;
-        }
     }
 }

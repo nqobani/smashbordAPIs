@@ -52,6 +52,7 @@ namespace Part1.Api.Controllers
         ///<param name="mustNotMath">It take a list ot providerTypes seperated by a comma(',') for example: sms,chat,facebook... The providerTypes you pass in this paremeter won't be included in the response/stats</param>
         /// <returns></returns>
         /// 
+        [Authorize]
         [Route("messages/compare")]
         public IEnumerable<MessageCountEntity> GetMessageStats(string interval, string startDate = "", string endDate = "", string goBackBy = "",string mustNotMath = "", string providerType = "all")
         {
@@ -111,6 +112,7 @@ namespace Part1.Api.Controllers
         /// <param name="excludeUserType">Takes in a list of user types seperated by a comma(',') for example: sms,chat,facebook... the user types specified in this field will not be included in the response.<br>NOTE: all is not supported</br></param>
         /// <returns></returns>
         /// 
+        [Authorize]
         [Route("messages/user")]
         public IEnumerable<UniqueUsersCountEntity> GetMessagesUniqueUsers(string userType,string excludeUserType="", string startDate = "", string endDate="", string interval = "month")
         {
@@ -121,18 +123,6 @@ namespace Part1.Api.Controllers
                 Date = s.Date,
                 AllDocs = s.AllDocs,
                 providerTypes = s.providerTypes
-            });
-        }
-        [Authorize]
-        [Route("tenants")]
-        public IEnumerable<tenantsEntity> GetStatsByTenant(string startingPoint = "")
-        {
-            var i = User.Identity;
-            var t = _icountMessage.GetByTenant(startingPoint);
-            return t.Select(j => new tenantsEntity
-            {
-                key = j.key,
-                docCount = j.docCount
             });
         }
     }
